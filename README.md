@@ -22,6 +22,7 @@ If you have code written already that works toward these ends, do the following.
 
 1. create a new branch of this repository
 2. add your files to `ephys`
+3. open a pull request for your branch
 
 We'll hack on and merge branches as needed during the hackathon.
 
