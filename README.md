@@ -19,7 +19,7 @@ scripts and utilities for processing electrophysiology data
 ## approach
 
 If you have code written already that works toward these ends, do the following...
-see "for dummies" list below if needed
+
 1. create a new branch of this repository
 2. add your files to `ephys`
 3. open a pull request for your branch
@@ -27,6 +27,9 @@ see "for dummies" list below if needed
 We'll hack on and merge branches as needed during the hackathon.
 
 ## approach (for dummies)
+
+If you have code written already that works toward these ends, do the following...
+
 if you are not already familiar with this process you might enjoy these hopefully interpretable steps
 (using the language of MAC OSx)
 - Clone the repository on your local computer.
