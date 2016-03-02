@@ -31,6 +31,7 @@ We'll hack on and merge branches as needed during the hackathon.
 If you have code written already that works toward these ends, do the following...
 
 if you are not already familiar with this process you might enjoy these hopefully interpretable steps
+
 (using the language of MAC OSx)
 - Clone the repository on your local computer.
 	- From the terminal command line on your local computer 
