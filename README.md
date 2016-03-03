@@ -54,36 +54,34 @@ If you have code written already that works toward these ends, do the following.
 
 We'll hack on and merge branches as needed during the hackathon.
 
-## approach (for dummies)
-
-If you have code written already that works toward these ends, do the following...
+## approach (step-by-step)
 
 if you are not already familiar with this process you might enjoy these hopefully interpretable steps
 
-(using the language of MAC OSx)
-- Clone the repository on your local computer.
-	- From the terminal command line on your local computer 
-	- change to the directory you want this repository to live, 
-	- RUN git clone [https link for repository]
-- Branch the repository before making any changes (add files, modify files, etc)
-	- from within the repository (so cd ../ephys-analysis)
-	- RUN git checkout -b [whatever you want to name your branch]
-- Add (file system language) files to "ephys" directory
-	- copy your script that you want to contribute (using cp command in terminal OR dragging and dropping using Finder)
-	- (or if you do not already have the code written, create a new file from withing ephys and write whatever script you want)
-- "Add" (git language) - means something more specific than "copy"
-	- RUN git add .
-	- Adds the files in the local repository and stages them for commit. To unstage a file, use 'git reset HEAD YOUR-FILE'.
-- commit these changes 
-	- Commits the tracked changes and prepares them to be pushed to a remote repository. To remove this commit and modify the file, use 'git reset --soft HEAD~1' and commit and add the file again.
-	- RUN git commit -m "whatever message you want to provide about what you did"
-- push the changes to the repository [on github?] 
-	- RUN git push origin [whatever you named your branch in step #2]
-	- Pushes the changes in your local repository up to the remote repository you specified as the origin
-- go online to github.com/gentnerlab/ephys-analysis/ to create a pull request for your branch
-	- after you "pushed your branch" from your computer, your branch should show up in the list under the branches tab in this repository
-	- CLICK on the "Pull Requests" tab
-	- CLICK "New Pull Request"
-	- CHOOSE "base: master" and "compare: [whatever you named your branch in step#2]"
 
+If you have code written already that works toward these ends, do the following...
 
+1. Clone the repository on your local computer.
+  1. From the terminal command line on your local computer 
+  2. change to the directory you want this repository to live, 
+  3. RUN `git clone [https link for repository]`
+2. Branch the repository before making any changes (add files, modify files, etc)
+  1. from within the repository (so cd ../ephys-analysis)
+  2. RUN `git checkout -b [whatever you want to name your branch]`
+3. Add (file system language) files to "ephys" directory
+  1. copy your script that you want to contribute (using cp command in terminal OR dragging and dropping using Finder)
+  2. (or if you do not already have the code written, create a new file from withing ephys and write whatever script you want)
+4. "Add" (git language) - means something more specific than "copy"
+  1. RUN `git add .`
+  2. Adds the files in the local repository and stages them for commit. To unstage a file, use `git reset HEAD YOUR-FILE`.
+5. commit these changes 
+  1. Commits the tracked changes and prepares them to be pushed to a remote repository. To remove this commit and modify the file, use `git reset --soft HEAD~1` and commit and add the file again.
+  2. RUN `git commit -m "whatever message you want to provide about what you did"`
+6. push the changes to the repository [on github?] 
+  1. RUN `git push origin [whatever you named your branch in step #2]`
+  2. Pushes the changes in your local repository up to the remote repository you specified as the origin
+7. go online to http://github.com/gentnerlab/ephys-analysis/ to create a pull request for your branch
+  1. after you "pushed your branch" from your computer, your branch should show up in the list under the branches tab in this repository
+  2. CLICK on the "Pull Requests" tab
+  3. CLICK "New Pull Request"
+  4. CHOOSE "base: master" and "compare: [whatever you named your branch in step#2]"
