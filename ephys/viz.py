@@ -47,7 +47,7 @@ def plot_all_clusters(block,clusters=None):
     plt.xticks([])
     plt.yticks([])
 
-    
+
 
 def plot_spike_shape(block,clu,normalize=False,**kwargs):
     fs = get_fs(block)
@@ -61,3 +61,30 @@ def plot_spike_shape(block,clu,normalize=False,**kwargs):
     
     plt.plot(time,shape,**kwargs)
     
+
+
+def plot_mean_waveform(mean_waveform,prb,chan_alpha=None,scale_factor=0.05,color='0.5',**plot_kwargs):
+    prb_info = imp.load_source('prb',prb)
+    
+    channels = prb_info.channel_groups[0]['channels']
+    geometry = prb_info.channel_groups[0]['geometry']
+
+    coords = np.array([geometry[ch] for ch in channels])
+    
+    arr = np.fromfile(mean_waveform,dtype=np.float32).reshape((-1,len(channels)))
+    
+    if chan_alpha is None:
+        chan_alpha = np.ones(len(coords))
+    
+    for waveform,xy,alpha in zip(arr.T,coords,chan_alpha):
+#         print mask
+        plt.plot(xy[0]+np.arange(len(waveform))-len(waveform)/2,
+                 waveform*scale_factor+xy[1],
+                 color=color,
+                 alpha=alpha,
+                 **plot_kwargs
+                )
+        try:
+            label = plot_kwargs.pop('label')
+        except KeyError:
+            pass

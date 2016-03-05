@@ -4,6 +4,14 @@ import numpy as np
 import h5py as h5
 import pandas as pd
 
+def ls(find_file_func):
+    def decorated(block_path):
+        ls = glob.glob(find_file_func(block_path))
+        assert len(ls)==1, ls
+        return ls[0]
+    return decorated
+
+@ls
 def get_kwik(block_path):
     '''
     Returns the kwik file found in the block path
@@ -17,10 +25,9 @@ def get_kwik(block_path):
     ------
     kwik : full path name to kwik file
     '''
-    kwik = glob.glob(os.path.join(block_path,'*.kwik'))
-    assert len(kwik)==1
-    return kwik[0]
+    return os.path.join(block_path,'*.kwik')
 
+@ls
 def get_kwd(block_path):
     '''
     Returns the raw.kwd file found in the block path
@@ -34,10 +41,9 @@ def get_kwd(block_path):
     ------
     kwd : full path name to raw.kwd file
     '''
-    kwd = glob.glob(os.path.join(block_path,'*.raw.kwd'))
-    assert len(kwd)==1
-    return kwd[0]
+    return os.path.join(block_path,'*.raw.kwd')
 
+@ls
 def get_prb(block_path):
     '''
     Returns the *.prb file found in the block path
@@ -51,9 +57,22 @@ def get_prb(block_path):
     ------
     prb : full path name to *.prb file
     '''
-    ls = glob.glob(os.path.join(block_path,'*.prb'))
-    assert len(ls)==1
-    return ls[0]
+    return os.path.join(block_path,'*.prb')
+
+def load_probe(block_path):
+    '''
+    Returns the probe info for the block
+    
+    Parameters
+    ------
+    block_path : str
+        path to the block
+    
+    Returns
+    ------
+    probe_info : dictionary of probe channels, geometry, and adjacencies
+    '''
+    return imp.load_source('prb',get_prb(block_path))
 
 # def csv(block,name):
 #     return os.path.join(EXP_DIR,TABLE_DIR,'{}_{}.csv'.format(block,name))
