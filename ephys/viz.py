@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from core import load_probe, get_fs, get_clusters
 from clust import get_mean_waveform_array, upsample_spike, find_mean_masks
+from clust import get_cluster_coords
 
 def plot_cluster(block_path,clu,chan_alpha=None,scale_factor=0.05,color='0.5',**plot_kwargs):
     '''
@@ -135,3 +136,56 @@ def plot_spike_shape(block_path,clu,normalize=True,**kwargs):
         shape /= -shape[shape.argmin()]
     
     plt.plot(time,shape,**kwargs)
+
+def plot_cluster_locations(block_path,clusters=None,quality=('Good','MUA'),bin_width=50.0,**kwargs):
+    '''
+    Plots the mean waveforms for all clusters in a block, in the 
+        geometric layout from the probe file. 
+    
+    Parameters
+    ------
+    block_path : str
+        the path to the block
+    clusters : pandas dataframe, optional
+        cluster dataframe. default: load all clusters
+    quality : tuple of quality values
+        an array of alpha values to use for each channel. default: ('Good','MUA')
+    kwargs
+        keyword arguments are passed to the plot function
+    
+    '''
+    
+    if clusters is None:
+        clusters = get_clusters(block_path)
+        clusters = clusters[clusters.quality.isin(quality)]
+
+    if 'x_probe' not in clusters.columns:
+        cluster['x_probe'] = clusters['cluster'].map(
+            lambda clu: get_cluster_coords(block_path,clu,weight_func=clust.mean_masks_w)[0]
+        )
+
+    if 'y_probe' not in clusters.columns:
+        cluster['y_probe'] = clusters['cluster'].map(
+            lambda clu: get_cluster_coords(block_path,clu,weight_func=clust.mean_masks_w)[1]
+        )
+
+    prb_info = load_probe(block_path)
+    coords = np.array(prb_info.channel_groups[0]['geometry'].values())
+
+    x_bds = coords[:,0].min(),coords[:,0].max()
+    x_mid = sum(x_bds) / 2.0
+    y_bds = coords[:,1].min(),coords[:,1].max()
+    y_mid = sum(y_bds) / 2.0
+    bins = np.arange(coords.min(),coords.max()+2*bin_width,bin_width)-bin_width/2
+    half_span = (bins.max()-bins.min()) / 2
+
+    loc_plot = sns.jointplot('x_probe','y_probe',data=clusters,
+                             stat_func=None,
+                             marginal_kws={'bins':bins},
+                             **kwargs)
+
+    loc_plot.ax_joint.set_aspect('equal')
+    loc_plot.ax_joint.set_xlim(x_mid-half_span,x_mid+half_span)
+    loc_plot.ax_joint.set_ylim(y_mid-half_span,y_mid+half_span)
+    loc_plot.ax_joint.set_xticks(np.unique(coords[:,0]))
+    loc_plot.ax_joint.set_yticks(np.unique(coords[:,1]))
