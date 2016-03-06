@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from core import load_probe, get_fs, get_clusters
 from clust import get_mean_waveform_array, upsample_spike, find_mean_masks
-from clust import get_cluster_coords
+from clust import get_cluster_coords, mean_masks_w
 
 def plot_cluster(block_path,clu,chan_alpha=None,scale_factor=0.05,color='0.5',**plot_kwargs):
     '''
@@ -139,8 +139,7 @@ def plot_spike_shape(block_path,clu,normalize=True,**kwargs):
 
 def plot_cluster_locations(block_path,clusters=None,quality=('Good','MUA'),bin_width=50.0,**kwargs):
     '''
-    Plots the mean waveforms for all clusters in a block, in the 
-        geometric layout from the probe file. 
+    Plots the distribution of cluster locations.
     
     Parameters
     ------
@@ -150,6 +149,8 @@ def plot_cluster_locations(block_path,clusters=None,quality=('Good','MUA'),bin_w
         cluster dataframe. default: load all clusters
     quality : tuple of quality values
         an array of alpha values to use for each channel. default: ('Good','MUA')
+    bin_width : float
+        width of bins for marginal distribution plots
     kwargs
         keyword arguments are passed to the plot function
     
@@ -160,13 +161,13 @@ def plot_cluster_locations(block_path,clusters=None,quality=('Good','MUA'),bin_w
         clusters = clusters[clusters.quality.isin(quality)]
 
     if 'x_probe' not in clusters.columns:
-        cluster['x_probe'] = clusters['cluster'].map(
-            lambda clu: get_cluster_coords(block_path,clu,weight_func=clust.mean_masks_w)[0]
+        clusters['x_probe'] = clusters['cluster'].map(
+            lambda clu: get_cluster_coords(block_path,clu,weight_func=mean_masks_w)[0]
         )
 
     if 'y_probe' not in clusters.columns:
-        cluster['y_probe'] = clusters['cluster'].map(
-            lambda clu: get_cluster_coords(block_path,clu,weight_func=clust.mean_masks_w)[1]
+        clusters['y_probe'] = clusters['cluster'].map(
+            lambda clu: get_cluster_coords(block_path,clu,weight_func=mean_masks_w)[1]
         )
 
     prb_info = load_probe(block_path)
