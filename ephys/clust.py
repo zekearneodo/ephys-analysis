@@ -2,10 +2,24 @@ import os
 import glob
 import numpy as np
 from scipy.interpolate import UnivariateSpline
-from core import ls, load_probe, get_fs
+from core import file_finder, load_probe, get_fs
 
-@ls
+@file_finder
 def find_mean_waveforms(block_path,cluster,cluster_store=0,clustering='main'):
+    '''
+    Returns the mean waveform file for a given cluster found in the block path
+    
+    Parameters
+    ------
+    block_path : str
+        path to the block
+    clu : int
+        the cluster identifier
+    
+    Returns
+    ------
+    mean_waveforms_file : full path name to mean_waveforms file
+    '''
     return os.path.join(block_path,
                         '*.phy',
                         'cluster_store',
@@ -14,8 +28,22 @@ def find_mean_waveforms(block_path,cluster,cluster_store=0,clustering='main'):
                         '{}.mean_waveforms'.format(cluster)
                         )
 
-@ls
+@file_finder
 def find_mean_masks(block_path,cluster,cluster_store=0,clustering='main'):
+    '''
+    Returns the mean masks file for a given cluster found in the block path
+    
+    Parameters
+    ------
+    block_path : str
+        path to the block
+    clu : int
+        the cluster identifier
+    
+    Returns
+    ------
+    mean_masks_file : full path name to mean_waveforms file
+    '''
     return os.path.join(block_path,
                         '*.phy',
                         'cluster_store',
@@ -86,7 +114,7 @@ def get_cluster_coords(block_path,clu,weight_func=None):
     '''
     if weight_func is None:
         weight_func = max_masks_w
-    w = weight_func(block,clu)
+    w = weight_func(block_path,clu)
 
     prb_info = load_probe(block_path)
     channels = prb_info.channel_groups[0]['channels']
@@ -99,7 +127,7 @@ def get_cluster_coords(block_path,clu,weight_func=None):
 
 ## spike shapes
 
-def upsample_spike(spike_shape,fs,new_fs=200.0):
+def upsample_spike(spike_shape,fs,new_fs=1000000.0):
     '''
     upsamples a spike shape to prepare it for computing the spike width 
     
@@ -119,9 +147,10 @@ def upsample_spike(spike_shape,fs,new_fs=200.0):
     new_spike_shape :
         upsampled spike shape
     '''
-    t = np.arange(0,spike_shape.shape[0]/fs,1/fs)[:spike_shape.shape[0]]
+    t_max = spike_shape.shape[0]/fs
+    t = np.arange(0,t_max,1/fs)[:spike_shape.shape[0]]
     spl = UnivariateSpline(t,spike_shape)
-    ts = np.arange(0,len(spike_shape)/fs,1/new_fs)
+    ts = np.arange(0,t_max,1/new_fs)
     return ts, spl(ts)
     
 def get_troughpeak(time,spike_shape):
@@ -144,7 +173,7 @@ def get_troughpeak(time,spike_shape):
     peak_i = spike_shape[trough_i:].argmax()+trough_i
     return time[trough_i],time[peak_i]
 
-def get_width(block_path,clu,new_fs=200.0):
+def get_width(block_path,clu,new_fs=1000000.0):
     '''
     grabs the time of the trough and peak
     
@@ -168,9 +197,9 @@ def get_width(block_path,clu,new_fs=200.0):
     return peak-trough
 
 
-def get_spike_exemplar(block_path,clu):
+def get_mean_waveform_array(block_path,clu):
     '''
-    returns an exemplar of the spike shape
+    returns the mean spike shape on all channels
     
     Parameters
     ------
@@ -181,15 +210,36 @@ def get_spike_exemplar(block_path,clu):
     
     Returns
     ------
-    exemplar : float
-        the width of the spike in seconds
+    mean_waveform_array : numpy array
+        mean waveform on principal channel. shape: (time_samples,channels)
     '''
     prb_info = load_probe(block_path)
+    mean_waveform = find_mean_waveforms(block_path,clu)
+    shape = (-1,len(prb_info.channel_groups[0]['channels']))
+    return np.fromfile(mean_waveform,dtype=np.float32).reshape(shape)
+
+
+def get_spike_exemplar(block_path,clu):
+    '''
+    returns an exemplar of the spike shape on the principal channel
     
-    mean_waveform = find_mean_waveforms(block,clu)
-    arr = np.fromfile(mean_waveform,dtype=np.float32).reshape((-1,len(prb_info.channel_groups[0]['channels'])))
+    Parameters
+    ------
+    block_path : str
+        the path to the block
+    clu : int
+        the cluster identifier
     
-    mean_masks = find_mean_masks(block,clu)
+    Returns
+    ------
+    exemplar : numpy array
+        mean waveform on principal channel
+    '''
+    
+    mean_waveform = find_mean_waveforms(block_path,clu)
+    arr = get_mean_waveform_array(block_path,clu)
+    
+    mean_masks = find_mean_masks(block_path,clu)
     mean_masks_arr = np.fromfile(mean_masks,dtype=np.float32)
     
     return arr[:,mean_masks_arr.argmax()]

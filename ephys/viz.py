@@ -1,11 +1,13 @@
-
+import numpy as np
+import matplotlib.pyplot as plt
 import seaborn as sns
+from core import load_probe, get_fs, get_clusters
+from clust import get_mean_waveform_array, upsample_spike, find_mean_masks
 
-
-def plot_cluster(block_path,clu,color='0.5',**plot_kwargs):
+def plot_cluster(block_path,clu,chan_alpha=None,scale_factor=0.05,color='0.5',**plot_kwargs):
     '''
-    Returns the location of a given cluster on the probe in x,y coordinates
-        in whatever units and reference the probe file uses. 
+    Plots the mean waveforms on each channel for a single cluster, in the 
+        geometric layout from the probe file. 
     
     Parameters
     ------
@@ -13,32 +15,90 @@ def plot_cluster(block_path,clu,color='0.5',**plot_kwargs):
         the path to the block
     clu : int
         the cluster identifier
+    chan_alpha : numpy array
+        an array of alpha values to use for each channel
+    scale_factor : float
+        the factor to scale the waveforms (default: 0.05)
     color
-        whether to weight across channels or only find primary
+        color to plot (default: '0.5')
+    kwargs
+        keyword arguments are passed to the plot function
     
     '''
-    mean_waveforms = find_mean_waveforms(block,clu)
-    mean_masks_arr = np.fromfile(find_mean_masks(block,clu),dtype=np.float32)
-    prb = find_prb(block)
 
-    plot_mean_waveform(mean_waveforms,prb,chan_alpha=mean_masks_arr,color=color,**plot_kwargs)
+    #load the probe coordinates
+    prb_info = load_probe(block_path)
+    channels = prb_info.channel_groups[0]['channels']
+    geometry = prb_info.channel_groups[0]['geometry']
+    coords = np.array([geometry[ch] for ch in channels])
+
+    if chan_alpha is None:
+        chan_alpha = np.ones(len(coords))
+
+    mean_waveform_array = get_mean_waveform_array(block_path,clu)
     
+    for waveform,xy,alpha in zip(mean_waveform_array.T,coords,chan_alpha):
+        plt.plot(xy[0]+np.arange(len(waveform))-len(waveform)/2,
+                 waveform*scale_factor+xy[1],
+                 color=color,
+                 alpha=alpha,
+                 **plot_kwargs
+                )
+        try:
+            # if we get a label, let's only apply it once
+            label = plot_kwargs.pop('label')
+        except KeyError:
+            pass
 
-def plot_all_clusters(block,clusters=None):
+
+
+def plot_all_clusters(block_path,clusters=None,quality=('Good','MUA'),**kwargs):
+    '''
+    Plots the mean waveforms for all clusters in a block, in the 
+        geometric layout from the probe file. 
+    
+    Parameters
+    ------
+    block_path : str
+        the path to the block
+    clusters : pandas dataframe, optional
+        cluster dataframe. default: load all clusters
+    quality : tuple of quality values
+        an array of alpha values to use for each channel. default: ('Good','MUA')
+    kwargs
+        keyword arguments are passed to the plot function
+    
+    '''
     
     if clusters is None:
-        clusters = get_clusters(block)
-        clusters = clusters[clusters.quality.isin(['Good','MUA'])].sort_values(['quality','cluster']).reset_index()
+        clusters = get_clusters(block_path)
+        clusters = clusters[clusters.quality.isin(quality)]
+
+    clusters = (
+        clusters
+        .sort_values(['quality','cluster'])
+        .reset_index()
+        )
 
     palette = sns.color_palette("hls", len(clusters))
 
-    f = plt.figure(figsize=(6, 12))
     for idx,cluster_row in clusters.iterrows():
 
-        clu = cluster_row.cluster
-        qual = cluster_row.quality
+        lbl = "{}({})".format(cluster_row.cluster,cluster_row.quality)
 
-        plot_cluster(block,clu,color=palette[idx],scale_factor=0.05,label="{}({})".format(clu,qual))
+        # use mean mask for alpha transparency
+        mean_masks_array = np.fromfile(
+            find_mean_masks(block_path,cluster_row.cluster),
+            dtype=np.float32
+            )
+
+        plot_cluster(block_path,
+                     cluster_row.cluster,
+                     color=palette[idx],
+                     chan_alpha=mean_masks_array,
+                     label=lbl,
+                     **kwargs
+                     )
 
     plt.axis('equal')
     leg = plt.legend(loc='center left')
@@ -49,42 +109,29 @@ def plot_all_clusters(block,clusters=None):
 
 
 
-def plot_spike_shape(block,clu,normalize=False,**kwargs):
-    fs = get_fs(block)
-    raw_shape = get_raw_shape(block,clu)
+def plot_spike_shape(block_path,clu,normalize=True,**kwargs):
+    '''
+    Plots the upsampled spike shape, aligned to the trough. 
     
-    time,shape = upsample_spike(raw_shape,fs)
+    Parameters
+    ------
+    block_path : str
+        the path to the block
+    clu : int
+        the cluster identifier
+    normalize : boolean
+        scale the spike shape to the depth of the trough
+    kwargs
+        keyword arguments are passed to the plot function
+    
+    '''
+    fs = get_fs(block_path)
+    exemplar = get_spike_exemplar(block_path,clu)
+    
+    time,shape = upsample_spike(exemplar,fs)
     time -= time[shape.argmin()]
     
     if normalize==True:
         shape /= -shape[shape.argmin()]
     
     plt.plot(time,shape,**kwargs)
-    
-
-
-def plot_mean_waveform(mean_waveform,prb,chan_alpha=None,scale_factor=0.05,color='0.5',**plot_kwargs):
-    prb_info = imp.load_source('prb',prb)
-    
-    channels = prb_info.channel_groups[0]['channels']
-    geometry = prb_info.channel_groups[0]['geometry']
-
-    coords = np.array([geometry[ch] for ch in channels])
-    
-    arr = np.fromfile(mean_waveform,dtype=np.float32).reshape((-1,len(channels)))
-    
-    if chan_alpha is None:
-        chan_alpha = np.ones(len(coords))
-    
-    for waveform,xy,alpha in zip(arr.T,coords,chan_alpha):
-#         print mask
-        plt.plot(xy[0]+np.arange(len(waveform))-len(waveform)/2,
-                 waveform*scale_factor+xy[1],
-                 color=color,
-                 alpha=alpha,
-                 **plot_kwargs
-                )
-        try:
-            label = plot_kwargs.pop('label')
-        except KeyError:
-            pass

@@ -1,7 +1,5 @@
-# functions to process stim & trial info from digmarks
-
-def find_stim_end(digmark_row):
-    return digmark_row['codes'] in '>#'
+import numpy as np
+from core import read_events, get_fs
     
 class FindEnd():
     def __init__(self):
@@ -25,24 +23,41 @@ def get_stim_start(stim_end_row,digmarks):
     this_trial = digmarks[mask][this_trial_mask]
     return this_trial.iloc[0]
 
-def is_not_floatable(string):
-    ''' returns True if string can be converted to float else False
+def _is_not_floatable(arg):
+    ''' returns True if arg cannot be converted to float
     '''
     try: 
-        float(string)
+        float(arg)
         return False
     except ValueError:
         return True
 
 
 def get_stim_info(trial_row,stimulus,fs):
+    '''
+    finds the stimulus info for a trial.
+
+    Parameters
+    -------
+    trial_row 
+        row from a trial
+    stimulus
+        pandas dataframe of all stimulus events 
+    fs : float
+        sampling rate of block
+
+    Returns
+    -------
+    digmark row for the response event
+
+    '''
     rec,samps = trial_row['recording'], trial_row['time_samples']
     stim_mask = (
         (stimulus['recording']==rec)
         & (stimulus['time_samples']>(samps-0.1*fs))
         & (stimulus['time_samples']<(samps+fs))
         & ~stimulus['text'].str.contains('date')
-        & stimulus['text'].apply(is_not_floatable)
+        & stimulus['text'].apply(_is_not_floatable) # occlude floats
         )
     
     if stim_mask.sum()>0:
@@ -52,6 +67,26 @@ def get_stim_info(trial_row,stimulus,fs):
 
 
 def get_stim_end(trial_row,digmarks,fs,window=60.0):
+    '''
+    finds the end of the stimulus event for a trial.
+
+    Parameters
+    -------
+    trial_row 
+        row from a trial
+    digmarks
+        pandas dataframe of all digmark events 
+    fs : float
+        sampling rate of block
+    window : float
+        time window (in seconds) after the stimulus start in which to look for 
+        the stimulus end. default: 60.0
+
+    Returns
+    -------
+    digmark row for the response event
+
+    '''
     rec,samps = trial_row['recording'], trial_row['time_samples']
     resp_mask = (
         (digmarks['recording']==rec)
@@ -63,6 +98,26 @@ def get_stim_end(trial_row,digmarks,fs,window=60.0):
     return digmarks[resp_mask].iloc[0]
 
 def get_response(trial_row,digmarks,fs,window=5.0):
+    '''
+    finds the response event for a trial.
+
+    Parameters
+    -------
+    trial_row 
+        row from a trial
+    digmarks
+        pandas dataframe of all digmark events 
+    fs : float
+        sampling rate of block
+    window : float
+        time window (in seconds) after the stimulus end in which to look for 
+        the response. default: 5.0
+
+    Returns
+    -------
+    digmark row for the response event
+
+    '''
     rec,samps = trial_row['recording'], trial_row['time_samples']
     try:
         stim_dur = trial_row['stimulus_end'] - trial_row['time_samples']
@@ -80,6 +135,26 @@ def get_response(trial_row,digmarks,fs,window=5.0):
         return dict(codes=np.nan,time_samples=np.nan,recording=np.nan)
 
 def get_consequence(trial_row,digmarks,fs,window=2.0):
+    '''
+    finds the consequence event for a trial.
+
+    Parameters
+    -------
+    trial_row 
+        row from a trial
+    digmarks
+        pandas dataframe of all digmark events 
+    fs : float
+        sampling rate of block
+    window : float
+        time window (in seconds) after the reponse in which to look for the 
+        consequence. default: 2.0
+
+    Returns
+    -------
+    digmark row for the consequence event
+
+    '''
     rec,samps = trial_row['recording'], trial_row['time_samples']
     rt = trial_row['response_time']
     bds = rt, rt+fs*window
@@ -95,14 +170,38 @@ def get_consequence(trial_row,digmarks,fs,window=2.0):
         return dict(codes=np.nan,time_samples=np.nan,recording=np.nan)
 
 def is_correct(consequence):
-    return consequence if consequence is np.nan else consequence in 'Ff'
+    '''
+    Checks if the consequence indicates that the trial was correct.
+    '''
+    try:
+        return consequence in 'Ff'
+    except TypeError:
+        return consequence
 
-def get_trials(block):
-    digmarks = read_events(block,'DigMark')
-    stimulus = read_events(block,'Stimulus')
-    fs = get_fs(block)
+def get_trials(block_path):
+    '''
+    returns a pandas dataframe containing trial information for a given block_path
+
+    Parameters
+    -------
+    block_path : str
+        the path to the block
+
+    Returns
+    ------
+
+    trials : pandas dataframe
+
+    Columns
+    ------
+
+
+    '''
+    digmarks = read_events(block_path,'DigMark')
+    stimulus = read_events(block_path,'Stimulus')
+    fs = get_fs(block_path)
     
-    stim_end_mask = digmarks.apply(find_stim_end,axis=1)
+    stim_end_mask = digmarks['codes'].isin(('>','#'))
     trials = digmarks[stim_end_mask].apply(lambda row: get_stim_start(row,digmarks),axis=1)[:]
     trials.reset_index(inplace=True)
     del trials['index']

@@ -1,17 +1,34 @@
 import sys, os
 import glob
+import imp
 import numpy as np
 import h5py as h5
 import pandas as pd
+from functools import wraps
 
-def ls(find_file_func):
-    def decorated(block_path):
-        ls = glob.glob(find_file_func(block_path))
+def file_finder(find_file_func):
+    '''
+    Decorator to help find files.
+
+    This wraps a function that yields a single value
+
+    Example use:
+
+    >>>@file_finder
+    >>>def find_my_text_file():
+    >>>    return '/home/ephys/*.txt'
+    >>>find_my_text_file()
+    /home/ephys/the_only_text_file_here.txt
+
+    '''
+    @wraps(find_file_func)
+    def decorated(*args,**kwargs):
+        ls = glob.glob(find_file_func(*args,**kwargs))
         assert len(ls)==1, ls
         return ls[0]
     return decorated
 
-@ls
+@file_finder
 def get_kwik(block_path):
     '''
     Returns the kwik file found in the block path
@@ -27,7 +44,7 @@ def get_kwik(block_path):
     '''
     return os.path.join(block_path,'*.kwik')
 
-@ls
+@file_finder
 def get_kwd(block_path):
     '''
     Returns the raw.kwd file found in the block path
@@ -43,7 +60,7 @@ def get_kwd(block_path):
     '''
     return os.path.join(block_path,'*.raw.kwd')
 
-@ls
+@file_finder
 def get_prb(block_path):
     '''
     Returns the *.prb file found in the block path
@@ -73,11 +90,6 @@ def load_probe(block_path):
     probe_info : dictionary of probe channels, geometry, and adjacencies
     '''
     return imp.load_source('prb',get_prb(block_path))
-
-# def csv(block,name):
-#     return os.path.join(EXP_DIR,TABLE_DIR,'{}_{}.csv'.format(block,name))
-
-## top-level functions to read data from kwik files
 
 def read_events(block_path,event_type):
     '''
