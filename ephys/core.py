@@ -126,12 +126,10 @@ def get_fs(block_path):
     ------
     block_path : str
         path to the block
-    event_type : str
-        the type of event
     
     Returns
     ------
-    events : pandas DataFrame
+    fs : sampling rate in Hz
     
     '''
     with h5.File(get_kwik(block_path),'r') as kf:
@@ -171,16 +169,23 @@ def get_qual(block_path,cluster):
 def get_clusters(block_path,channel_group=0,clustering='main'):
     '''
     Returns a dataframe of clusters observed in kwik file
-    
+
     Parameters
     ------
     block_path : str
         path to the block
+    channel_group : int, optional
+        shank ID
+    clustering : str, optional
+        ID of clustering
     
     Returns
     ------
     clusters : pandas DataFrame
-    
+        Dataframe format
+        cluster : cluster ID
+        quality : cluster quality from manual sort ('Noise', 'MUA', 'Good', 'unsorted')
+
     '''    
     with h5.File(get_kwik(block_path),'r') as kf:
         observed_clusters = np.unique(
@@ -192,17 +197,25 @@ def get_clusters(block_path,channel_group=0,clustering='main'):
 
 def get_spikes(block_path,channel_group=0,clustering='main'):
     '''
-    Returns a dataframe of spikes observed in kwik file
+    Returns a pandas dataframe of spikes observed in kwik file
     
     Parameters
     ------
     block_path : str
         path to the block
-    
+    channel_group : int, optional
+        shank ID
+    clustering : int, optional
+        ID of clustering
+        
     Returns
     ------
     spikes : pandas DataFrame
-    
+        Dataframe format
+        cluster : cluster ID of the spike 
+        recording : recording ID of the spike
+        time_samples : time stamp (samples) of the spike
+
     '''    
     with h5.File(get_kwik(block_path),'r') as kf:
         spikes = pd.DataFrame(
