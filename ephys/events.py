@@ -205,12 +205,24 @@ def get_trials(block_path):
 
     Returns
     ------
-
     trials : pandas dataframe
 
     Columns
     ------
-
+    time_samples : int 
+        Time in samples of the start of a stimulus (trial)
+    stimulus : str 
+        Name of the stimulus
+    stimulus_end : int 
+        Time in samples of the end of the stimulus 
+    response : str 
+        Response code of the animal
+    response_time : int 
+        Time in samples of the response of the animal
+    consequence : str 
+        Consequence code 
+    correct : bool 
+        Whether the trial was correct or not 
 
     '''
     digmarks = read_events(block_path,'DigMark')
