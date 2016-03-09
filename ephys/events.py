@@ -10,6 +10,22 @@ class FindEnd():
         return self.keep
     
 def get_stim_start(stim_end_row,digmarks):
+    '''
+    Finds the digmark row corresponding to the beginning of a stimulus
+
+    Parameters
+    ------
+    stim_end_row : pandas dataframe
+        The row of the digmark dataframe corresponding to the end of a stimulus
+    digmarks : pandas dataframe
+        The digmark dataframe
+
+    Returns
+    ------
+    this_trial : pandas dataframe
+        Row containing the digmark corresponding to the start of the stimulus 
+
+    '''
     rec,ts = stim_end_row['recording'],stim_end_row['time_samples']
     mask = (
         (digmarks['recording']==rec)
@@ -146,7 +162,7 @@ def get_consequence(trial_row,digmarks,fs,window=2.0):
         pandas dataframe of all digmark events 
     fs : float
         sampling rate of block
-    window : float
+    window : float, optional
         time window (in seconds) after the reponse in which to look for the 
         consequence. default: 2.0
 
@@ -189,12 +205,24 @@ def get_trials(block_path):
 
     Returns
     ------
-
     trials : pandas dataframe
 
     Columns
     ------
-
+    time_samples : int 
+        Time in samples of the start of a stimulus (trial)
+    stimulus : str 
+        Name of the stimulus
+    stimulus_end : int 
+        Time in samples of the end of the stimulus 
+    response : str 
+        Response code of the animal
+    response_time : int 
+        Time in samples of the response of the animal
+    consequence : str 
+        Consequence code 
+    correct : bool 
+        Whether the trial was correct or not 
 
     '''
     digmarks = read_events(block_path,'DigMark')
