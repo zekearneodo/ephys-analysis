@@ -10,6 +10,11 @@ class FindEnd():
         return self.keep
     
 def get_stim_start(stim_end_row,digmarks):
+    '''
+    finds 
+
+
+    '''
     rec,ts = stim_end_row['recording'],stim_end_row['time_samples']
     mask = (
         (digmarks['recording']==rec)

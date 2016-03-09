@@ -110,6 +110,12 @@ def read_events(block_path,event_type):
     Returns
     ------
     events : pandas DataFrame
+        Dataframe format
+        Depends on event type
+        codes : the code of the event 
+        time_samples : time in samples of the event
+        recording : the recording ID of the event 
+        text : text associated with the event (Stimulus only)
     
     '''
     with h5.File(get_kwik(block_path),'r') as kf:
