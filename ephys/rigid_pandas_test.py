@@ -23,9 +23,9 @@ print stims.head()
 
 #rec_stims = good_spikes[good_spikes.stim_name.str.contains('rec')]
 
-clusters = core.get_clusters(block_path)
+clusters = core.load_clusters(block_path)
 fs = core.get_fs(block_path)
-stim_length = (stims.stim_end_time_stamp.head(1).values[0] - stims.time_samples.head(1).values[0]) / fs
+stim_length = (stims.stim_end.head(1).values[0] - stims.stim_start.head(1).values[0]) / fs
 print clusters.head()
 cluster = clusters[clusters['quality']=="Good"]['cluster'].iloc[0]
 print stim_length
