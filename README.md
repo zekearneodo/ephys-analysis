@@ -126,3 +126,10 @@ If you have code written already that works toward these ends, do the following.
   2. CLICK on the "Pull Requests" tab
   3. CLICK "New Pull Request"
   4. CHOOSE "base: master" and "compare: [whatever you named your branch in step#2]"
+
+## naming conventions
+
+1. Functions that put together a filename are prefixed with 'find_'
+2. Functions that open files on disk and read their contents into memory are prefixed 'load_'
+3. Functions that return an attribute of some (data, object, etc) are prefixed 'get_'
+4. Functions that perform a computation are prefixed 'calc_'
