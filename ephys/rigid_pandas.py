@@ -8,10 +8,7 @@ import core
 def kwik2rigid_pandas(block_path):
     spikes = core.load_spikes(block_path)
     stims = load_acute_stims(block_path)
-    columns2copy = ['stim_name', 'stim_presentation', 'stim_start', 'stim_end']
-    spike_stim_info_df = pd.DataFrame(data=list(spikes["time_samples"].map(_EventAligner(stims, output_labels=columns2copy).event_checker)), columns=columns2copy, index=spikes.index)
-    spikes = spikes.join(spike_stim_info_df)
-    #spikes['stim_name'], spikes['stim_presentation'], spikes['stim_time_stamp'] = zip(*spikes["time_samples"].map(_EventAligner(stims).stim_checker))
+    spikes = spikes.join(align_events(spikes, stims))
     spikes['stim_aligned_time'] = spikes['time_samples'].values.astype('int') - spikes['stim_start'].values
     spikes['stim_duration'] = spikes['stim_end'] - spikes['stim_start']
     fs = core.get_fs(block_path)
@@ -94,12 +91,50 @@ class _EventCounter(Counter):
         self[key] += 1
         return self[key] - 1
 
+def align_events(spikes, events, columns2copy=['stim_name', 'stim_presentation',
+                                               'stim_start', 'stim_end'],
+                 start_label='stim_start', end_label='stim_end'):
+    '''
+    Generates a dataframe that labels spikes as belonging to event windows
+    Event windows must be non-overlapping
+    Spikes that lie between event windows will be assigned to the closest window
+
+    O(len(spikes) + len(events))
+
+    Parameters
+    -------
+    spikes : Pandas.DataFrame
+        from core.load_spikes
+    events : Pandas.DataFrame
+        such as from load_acute_stims or core.get_trials
+        must have non-overlapping windows defined by start_label and end_label
+    columns2copy : iterable of strings
+        labels of columns of events that you want to populate spike_stim_info_df
+        in the order you want them
+    start_label : str
+        label of the column of events corresponding to the start of the event
+    end_label : str
+        label of the column of events corresponding to the end of the event
+
+
+    Returns
+    ------
+    spike_event_info_df : Pandas.DataFrame
+        Spikes assigned to events
+        This DataFrame is indexed by spikes.index
+        Contains columns indicated by columns2copy
+
+    '''
+    return pd.DataFrame(
+        data=list(spikes["time_samples"].map(
+            _EventAligner(events, output_labels=columns2copy).event_checker)), 
+        columns=columns2copy, index=spikes.index)
+
 class _EventAligner(object):
-    # ['time_stamp', 'stim_end_time_stamp', 'stim_name', 'stim_presentation']
     # TODO: make robust to multiple recordings
     # TODO: duplicate spikes that are <2 sec from 2 stimuli
-    # TODO: generalize for any event type
-    def __init__(self, events, output_labels, start_label='stim_start', end_label='stim_end', event_index=0):
+    def __init__(self, events, output_labels, start_label='stim_start', 
+                 end_label='stim_end', event_index=0):
         self.event_index = event_index
         self.events = events
 
