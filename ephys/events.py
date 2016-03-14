@@ -223,9 +223,9 @@ def get_trials(block_path):
         Whether the trial was correct or not 
 
     '''
-    digmarks = read_events(block_path,'DigMark')
+    digmarks = load_events(block_path,'DigMark')
     digmarks = digmarks[digmarks['codes']!='C']
-    stimulus = read_events(block_path,'Stimulus')
+    stimulus = load_events(block_path,'Stimulus')
     stim_mask = (
         ~stimulus['text'].str.contains('date')
         & stimulus['text'].apply(_is_not_floatable) # occlude floats
