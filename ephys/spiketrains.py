@@ -1,3 +1,4 @@
+import numpy as np
 
 def get_spiketrain(rec,samps,clu,spikes,window,fs):
     '''

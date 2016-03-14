@@ -70,10 +70,8 @@ def get_stim_info(trial_row,stimulus,fs):
     rec,samps = trial_row['recording'], trial_row['time_samples']
     stim_mask = (
         (stimulus['recording']==rec)
-        & (stimulus['time_samples']>(samps-0.1*fs))
+        & (stimulus['time_samples']>(samps-1.0*fs))
         & (stimulus['time_samples']<(samps+fs))
-        & ~stimulus['text'].str.contains('date')
-        & stimulus['text'].apply(_is_not_floatable) # occlude floats
         )
     
     if stim_mask.sum()>0:
@@ -225,8 +223,15 @@ def get_trials(block_path):
         Whether the trial was correct or not 
 
     '''
-    digmarks = load_events(block_path,'DigMark')
-    stimulus = load_events(block_path,'Stimulus')
+    digmarks = read_events(block_path,'DigMark')
+    digmarks = digmarks[digmarks['codes']!='C']
+    stimulus = read_events(block_path,'Stimulus')
+    stim_mask = (
+        ~stimulus['text'].str.contains('date')
+        & stimulus['text'].apply(_is_not_floatable) # occlude floats
+        )
+    stimulus = stimulus[stim_mask]
+
     fs = get_fs(block_path)
     
     stim_end_mask = digmarks['codes'].isin(('>','#'))
