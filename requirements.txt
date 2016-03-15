@@ -1,0 +1,6 @@
+h5py==2.3.0
+pandas==0.16.2
+numpy==1.9.3
+scipy==0.16.0
+seaborn==0.4.0
+matplotlib==1.4.2
