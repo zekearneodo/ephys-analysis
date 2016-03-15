@@ -1,6 +1,8 @@
 # ephys-analysis
 scripts and utilities for processing electrophysiology data
 
+[![Build Status](https://travis-ci.org/gentnerlab/ephys-analysis.svg?branch=testing-merge-justin)](https://travis-ci.org/gentnerlab/ephys-analysis)
+
 ## input file structure
 
 these scripts assume that they are dealing with an experiment that has been sorted by phy. an example structure is as follows:
