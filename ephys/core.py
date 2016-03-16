@@ -62,7 +62,7 @@ def find_kwd(block_path):
 
 
 @file_finder
-def get_kwx(block_path):
+def find_kwx(block_path):
     '''
     Returns the kwx file found in the block path
     
@@ -94,7 +94,7 @@ def find_prb(block_path):
     return os.path.join(block_path,'*.prb')
 
 @file_finder
-def get_info(block_path):
+def find_info(block_path):
     '''
     Returns the raw.kwd file found in the block path
     

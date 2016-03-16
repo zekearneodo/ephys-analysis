@@ -33,7 +33,7 @@ class CoreTest(unittest.TestCase):
     def test_find_prb(self):
         self._test_find_(core.find_prb, ".prb")
     def test_find_info(self):
-        self._test_find_(core.find_kwx, "_info.json")
+        self._test_find_(core.find_info, "_info.json")
 
 def main():
     unittest.main()
