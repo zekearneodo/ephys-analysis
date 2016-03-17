@@ -16,9 +16,12 @@ install:
   # Useful for debugging any issues with conda
   - conda info -a
 
-  - conda create -y -n test-environment python=$TRAVIS_PYTHON_VERSION h5py pandas numpy scipy seaborn matplotlib nose
+  - conda create -y -n test-environment python=$TRAVIS_PYTHON_VERSION h5py pandas numpy scipy seaborn matplotlib nose coverage
   - source activate test-environment
-  #- conda install --yes python=$TRAVIS_PYTHON_VERSION h5py pandas numpy scipy seaborn matplotlib
+  - pip install coveralls
   - python setup.py install
 
-script: nosetests -v --exe
+script: nosetests -v --exe --with-coverage --cover-package=ephys
+
+after_success:
+  coveralls
