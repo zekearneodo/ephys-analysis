@@ -2,6 +2,7 @@
 scripts and utilities for processing electrophysiology data
 
 [![Build Status](https://travis-ci.org/gentnerlab/ephys-analysis.svg?branch=testing-merge-justin)](https://travis-ci.org/gentnerlab/ephys-analysis)
+[![Coverage Status](https://coveralls.io/repos/github/gentnerlab/ephys-analysis/badge.svg?branch=testing-merge-justin)](https://coveralls.io/github/gentnerlab/ephys-analysis?branch=testing-merge-justin)
 
 ## input file structure
 
